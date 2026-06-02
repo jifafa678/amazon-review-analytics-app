@@ -345,6 +345,50 @@ div[role="option"] div {
 div[role="option"]:hover {
     background-color: rgba(0, 209, 255, 0.22) !important;
 }
+    /* 强制修复：商品关键词输入框与品牌下拉框保持一致 */
+section[data-testid="stSidebar"] div[data-testid="stTextInput"] {
+    background-color: transparent !important;
+}
+
+section[data-testid="stSidebar"] div[data-testid="stTextInput"] > div {
+    background-color: transparent !important;
+}
+
+section[data-testid="stSidebar"] div[data-testid="stTextInput"] div[data-baseweb="input"] {
+    background-color: #08213A !important;
+    border: 1px solid rgba(0, 209, 255, 0.58) !important;
+    border-radius: 10px !important;
+    min-height: 46px !important;
+    box-shadow:
+        0 0 12px rgba(0, 209, 255, 0.12),
+        inset 0 0 10px rgba(0, 209, 255, 0.06) !important;
+}
+
+section[data-testid="stSidebar"] div[data-testid="stTextInput"] div[data-baseweb="base-input"] {
+    background-color: #08213A !important;
+    border-radius: 10px !important;
+}
+
+section[data-testid="stSidebar"] div[data-testid="stTextInput"] input {
+    background-color: #08213A !important;
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    caret-color: #00D1FF !important;
+    border-radius: 10px !important;
+}
+
+section[data-testid="stSidebar"] div[data-testid="stTextInput"] input:focus {
+    background-color: #08213A !important;
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+}
+
+section[data-testid="stSidebar"] div[data-testid="stTextInput"] input::placeholder {
+    color: rgba(220, 245, 255, 0.65) !important;
+    -webkit-text-fill-color: rgba(220, 245, 255, 0.65) !important;
+}
     </style>
     """,
     unsafe_allow_html=True
