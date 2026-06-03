@@ -265,10 +265,15 @@ for col, (label, value, note) in zip(st.columns(4), insights[:4]):
 
 st.sidebar.title("筛选条件")
 st.sidebar.caption("可通过商品关键词、品牌、评分和样本评论数定位商品口碑表现。")
-brand_df = query_data("SELECT DISTINCT brand FROM products WHERE brand IS NOT NULL AND brand!='' ORDER BY brand;")
-brand_options = ["全部品牌"] + brand_df["brand"].dropna().tolist()
 keyword = st.sidebar.text_input("商品关键词", value="")
-selected_brand = st.sidebar.selectbox("品牌", brand_options)
+brand_df = query_data("SELECT DISTINCT brand FROM products WHERE brand IS NOT NULL AND brand!='' ORDER BY brand;")
+brand_options = ["全部品牌"] + brand_df["brand"].dropna().astype(str).tolist()
+selected_brand = st.sidebar.selectbox(
+    "品牌关键词",
+    brand_options,
+    index=None,
+    placeholder="输入品牌名称搜索匹配",
+)
 min_rating = st.sidebar.slider("最低商品平均评分", 0.0, 5.0, 0.0, 0.1)
 min_sample_reviews = st.sidebar.selectbox("最低样本评论数", options=[0, 1, 2, 3, 5, 10, 20, 50, 100], index=1)
 limit_n = st.sidebar.slider("最多显示商品数", 10, 200, 50, 10)
@@ -290,7 +295,7 @@ with tab1:
     params = []
     if keyword.strip():
         product_sql += " AND p.product_title LIKE ? "; params.append(f"%{keyword.strip()}%")
-    if selected_brand != "全部品牌":
+    if selected_brand and selected_brand != "全部品牌":
         product_sql += " AND p.brand = ? "; params.append(selected_brand)
     product_sql += """
     GROUP BY p.product_id,p.product_title,p.brand,p.main_category,p.price,p.average_rating,p.rating_number
