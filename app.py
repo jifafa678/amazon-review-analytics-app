@@ -366,13 +366,34 @@ with tab2:
     if not brand_performance.empty:
         x_mid = float(brand_performance["review_count"].median())
         y_mid = float(brand_performance["negative_review_ratio"].median())
-        color_map = {"低风险": "#5FF0A5", "中风险": "#FFD166", "高风险": "#FF5C7A"}
+        quadrant_df = brand_performance.copy()
+
+        def classify_quadrant(row):
+            if row["review_count"] >= x_mid and row["negative_review_ratio"] >= y_mid:
+                return "重点风险品牌"
+            if row["review_count"] >= x_mid and row["negative_review_ratio"] < y_mid:
+                return "优势品牌"
+            if row["review_count"] < x_mid and row["negative_review_ratio"] >= y_mid:
+                return "潜在风险品牌"
+            return "普通观察品牌"
+
+        quadrant_df["quadrant_type"] = quadrant_df.apply(classify_quadrant, axis=1)
+        color_map = {
+            "重点风险品牌": "#FF5C7A",
+            "潜在风险品牌": "#FFD166",
+            "优势品牌": "#5FF0A5",
+            "普通观察品牌": "#70A9FF",
+        }
         fig = go.Figure()
-        for level, df_level in brand_performance.groupby("risk_level"):
-            fig.add_trace(go.Scatter(x=df_level["review_count"], y=df_level["negative_review_ratio"], mode="markers+text", text=df_level["brand"].where(df_level["review_count"].rank(ascending=False) <= 6, ""), textposition="top center", marker=dict(size=(df_level["product_count"].clip(lower=1) ** 0.5) * 9 + 8, color=color_map.get(level, "#00D1FF"), line=dict(color="rgba(255,255,255,.85)", width=1), opacity=.82), name=level, customdata=df_level[["brand", "product_count", "avg_review_rating", "verified_purchase_ratio", "risk_score"]], hovertemplate="品牌：%{customdata[0]}<br>评论量：%{x:,}<br>差评率：%{y:.1%}<br>商品数：%{customdata[1]}<br>平均评分：%{customdata[2]:.2f}<br>验证购买占比：%{customdata[3]:.1%}<br>风险评分：%{customdata[4]:.1f}<extra></extra>"))
+        quadrant_order = ["重点风险品牌", "潜在风险品牌", "优势品牌", "普通观察品牌"]
+        for quadrant_type in quadrant_order:
+            df_level = quadrant_df[quadrant_df["quadrant_type"] == quadrant_type]
+            if df_level.empty:
+                continue
+            fig.add_trace(go.Scatter(x=df_level["review_count"], y=df_level["negative_review_ratio"], mode="markers+text", text=df_level["brand"].where(df_level["review_count"].rank(ascending=False) <= 6, ""), textposition="top center", marker=dict(size=(df_level["product_count"].clip(lower=1) ** 0.5) * 9 + 8, color=color_map.get(quadrant_type, "#00D1FF"), line=dict(color="rgba(255,255,255,.85)", width=1), opacity=.82), name=quadrant_type, customdata=df_level[["brand", "product_count", "avg_review_rating", "verified_purchase_ratio", "risk_score", "risk_level", "quadrant_type"]], hovertemplate="品牌：%{customdata[0]}<br>四象限类别：%{customdata[6]}<br>评论量：%{x:,}<br>差评率：%{y:.1%}<br>商品数：%{customdata[1]}<br>平均评分：%{customdata[2]:.2f}<br>验证购买占比：%{customdata[3]:.1%}<br>风险评分：%{customdata[4]:.1f}<br>口碑风险等级：%{customdata[5]}<extra></extra>"))
         fig.add_vline(x=x_mid, line_dash="dash", line_color="rgba(255,255,255,.38)")
         fig.add_hline(y=y_mid, line_dash="dash", line_color="rgba(255,255,255,.38)")
-        fig.update_layout(height=500, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="#DDF7FF"), margin=dict(l=20, r=20, t=35, b=35), xaxis=dict(title="品牌评论量", showgrid=True, gridcolor="rgba(0,209,255,.12)", zeroline=False), yaxis=dict(title="差评率", tickformat=".0%", showgrid=True, gridcolor="rgba(0,209,255,.12)", zeroline=False), legend=dict(title="口碑风险等级"))
+        fig.update_layout(height=500, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font=dict(color="#DDF7FF"), margin=dict(l=20, r=20, t=35, b=35), xaxis=dict(title="品牌评论量", showgrid=True, gridcolor="rgba(0,209,255,.12)", zeroline=False), yaxis=dict(title="差评率", tickformat=".0%", showgrid=True, gridcolor="rgba(0,209,255,.12)", zeroline=False), legend=dict(title="四象限类别"))
         st.plotly_chart(fig, width="stretch", config={"displayModeBar": False})
         st.markdown('<div class="small-muted"><b>四象限解读：</b><br>高评论量 + 高差评率：重点风险品牌；高评论量 + 低差评率：优势品牌；低评论量 + 高差评率：潜在风险品牌；低评论量 + 低差评率：普通观察品牌。</div>', unsafe_allow_html=True)
 
@@ -440,3 +461,4 @@ with tab3:
         display_dataframe(monthly_display, height=300)
     else:
         st.info("当前数据中暂无足够的月度趋势数据。")
+
